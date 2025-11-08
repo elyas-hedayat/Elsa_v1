@@ -1,0 +1,19 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Ignore dependency caches
+.uv-cache/
+pip-wheel-metadata/
+
+# Ignore Git and editor files
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Ignore tests and local data (optional during dev)
+tests/__pycache__/
+*.log
