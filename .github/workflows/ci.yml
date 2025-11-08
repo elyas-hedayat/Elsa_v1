@@ -10,6 +10,17 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     steps:
 
       - name: Checkout repository
@@ -26,8 +37,28 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Run Ruff
+      - name: Create .env file
+        run: |
+          echo "APP_NAME=${{ secrets.APP_NAME }}" > .env
+          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "DEBUG=${{ secrets.DEBUG }}" >> .env
+          echo "LOG_LEVEL=${{ secrets.LOG_LEVEL }}" >> .env
+
+      - name: Verify .env file created
+        run: ls -la .env
+
+      - name: Run Ruff (Linter)
         run: uv run ruff check .
 
+      - name: Run Ruff (Formatter check)
+        run: uv run ruff format . --check
+
       - name: Run pytest
-        run: uv run pytest -v
+        run: uv run pytest -v --tb=short
+
+      - name: Upload coverage reports
+        if: always()
+        run: |
+          uv run pytest --cov=app --cov-report=xml
+        continue-on-error: true
