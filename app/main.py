@@ -1,5 +1,6 @@
 import sentry_sdk
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
@@ -19,6 +20,7 @@ sentry_sdk.init(
 
 app = FastAPI(title=settings.app_name)
 app.include_router(router)
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")
