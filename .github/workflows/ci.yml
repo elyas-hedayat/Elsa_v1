@@ -35,18 +35,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync
-
-      - name: Create .env file
-        run: |
-          echo "APP_NAME=${{ secrets.APP_NAME }}" > .env
-          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DEBUG=${{ secrets.DEBUG }}" >> .env
-          echo "LOG_LEVEL=${{ secrets.LOG_LEVEL }}" >> .env
-
-      - name: Verify .env file created
-        run: ls -la .env
+        run: uv sync --all-groups
 
       - name: Run Ruff (Linter)
         run: uv run ruff check .
