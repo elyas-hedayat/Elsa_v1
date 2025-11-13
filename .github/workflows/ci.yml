@@ -56,9 +56,3 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest -v --tb=short
-
-      - name: Upload coverage reports
-        if: always()
-        run: |
-          uv run pytest --cov=app --cov-report=xml
-        continue-on-error: true
