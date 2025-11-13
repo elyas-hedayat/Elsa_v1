@@ -1,14 +1,72 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - 'feature/*'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
 
 jobs:
-  build-test:
+  lint-format:
+    name: Code Quality Checks
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install uv
+
+      - run: uv sync
+
+      - name: Run Ruff Linter
+        run: uv run ruff check . --output-format=github
+
+      - name: Run Ruff Formatter
+        run: uv run ruff format . --check
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install uv
+
+      - run: uv sync
+
+      - name: Bandit Security Check
+        run: uv run bandit -r app/ -f json -o bandit-report.json || true
+
+      - name: Bandit Report Summary
+        run: uv run bandit -r app/ || true
+
+      - name: Safety Check Dependencies
+        run: uv run pip-audit || true
+
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    needs: lint-format
+
+    strategy:
+      matrix:
+        python-version: [ '3.10', '3.11', '3.12' ]
+      fail-fast: false
 
     services:
       redis:
@@ -22,43 +80,34 @@ jobs:
           - 6379:6379
 
     steps:
+      - uses: actions/checkout@v4
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install uv
-        run: pip install uv
+      - run: pip install uv
 
-      - name: Install dependencies
-        run: uv sync
+      - run: uv sync
 
       - name: Create .env file
         run: |
           echo "APP_NAME=${{ secrets.APP_NAME }}" > .env
-          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DEBUG=${{ secrets.DEBUG }}" >> .env
-          echo "LOG_LEVEL=${{ secrets.LOG_LEVEL }}" >> .env
+          echo "DEBUG=false" >> .env
+          echo "LOG_LEVEL=INFO" >> .env
 
-      - name: Verify .env file created
-        run: ls -la .env
+      - name: Run Tests with Coverage
+        run: uv run pytest -v --tb=short --cov=app --cov-report=xml --cov-report=html
 
-      - name: Run Ruff (Linter)
-        run: uv run ruff check .
-
-      - name: Run Ruff (Formatter check)
-        run: uv run ruff format . --check
-
-      - name: Run pytest
-        run: uv run pytest -v --tb=short
-
-      - name: Upload coverage reports
-        if: always()
-        run: |
-          uv run pytest --cov=app --cov-report=xml
-        continue-on-error: true
+      - name: Create Pull Request to main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Auto: Ready to merge feature branch"
+          title: "Feature branch merge into main"
+          body: "This PR was automatically created by CI/CD workflow."
+          base: main
+          head: ${{ github.ref_name }}  # current feature branch
+          draft: false
