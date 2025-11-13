@@ -1,27 +1,82 @@
 [project]
 name = "redis-shop"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Redis-backed e-commerce backend service"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "alembic>=1.17.1",
     "asyncpg>=0.30.0",
     "bcrypt>=5.0.0",
     "fastapi[standard]>=0.121.0",
     "passlib[argon2,bcrypt]>=1.7.4",
-    "pre-commit>=4.3.0",
+    "prometheus-client>=0.23.1",
+    "prometheus-fastapi-instrumentator>=7.1.0",
     "psycopg[binary]>=3.2.12",
     "pydantic-settings>=2.11.0",
     "pyjwt>=2.10.1",
-    "pytest>=8.4.2",
     "python-jose[cryptography]>=3.5.0",
     "redis>=7.0.1",
-    "ruff>=0.14.4",
     "sentry-sdk>=2.43.0",
     "sqlalchemy[asyncio]>=2.0.44",
     "uvicorn[standard]>=0.38.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.14.4",
+    "pre-commit>=4.3.0",
+    "bandit>=1.7.5",
+    "pip-audit>=2.6.1",
+]
+
 [tool.ruff]
-ignore = ["B008", "F821", "E402"]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "C",
+    "B",
+    "U",
+]
+ignore = [
+    "B008",
+    "E402",
+    "F821",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "--cov=app --cov-report=xml --cov-report=html --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\(Protocol\\):",
+    "@abstractmethod",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
