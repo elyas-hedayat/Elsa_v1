@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,13 +19,17 @@ auth_service = AuthService()
 
 
 @router.post("/register")
-async def register(data: RegisterRequest, session: AsyncSession = Depends(get_session)):
+async def register(
+    data: RegisterRequest, session: Annotated[AsyncSession, Depends(get_session)]
+):
     user = await auth_service.register_user(session, data.username, data.password)
     return {"message": "User created", "user_id": user.id}
 
 
 @router.post("/login")
-async def login(data: LoginRequest, session: AsyncSession = Depends(get_session)):
+async def login(
+    data: LoginRequest, session: Annotated[AsyncSession, Depends(get_session)]
+):
     return await auth_service.authenticate_user(session, data.username, data.password)
 
 
@@ -35,8 +41,8 @@ async def login(data: LoginRequest, session: AsyncSession = Depends(get_session)
 )
 async def change_password(
     data: ChangePasswordRequest,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await auth_service.change_password(
         session,
