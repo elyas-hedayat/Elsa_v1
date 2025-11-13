@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379"
     database_url: str = "postgresql+asyncpg://postgres:postgres@db:5432/shop_db"
     sentry_dns: str
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+    DEBUG: bool
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

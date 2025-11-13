@@ -21,3 +21,9 @@ async def db_test(
 ):
     result = await session.execute(text("SELECT 1"))
     return {"result": result.scalar()}
+
+
+@router.get("/health")
+def health_check():
+    print("Health Check")
+    return {"status": "ok"}

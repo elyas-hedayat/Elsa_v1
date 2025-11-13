@@ -5,15 +5,23 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.17.1",
     "asyncpg>=0.30.0",
+    "bcrypt>=5.0.0",
     "fastapi[standard]>=0.121.0",
+    "passlib[argon2,bcrypt]>=1.7.4",
     "pre-commit>=4.3.0",
     "psycopg[binary]>=3.2.12",
     "pydantic-settings>=2.11.0",
+    "pyjwt>=2.10.1",
     "pytest>=8.4.2",
+    "python-jose[cryptography]>=3.5.0",
     "redis>=7.0.1",
     "ruff>=0.14.4",
     "sentry-sdk>=2.43.0",
     "sqlalchemy[asyncio]>=2.0.44",
     "uvicorn[standard]>=0.38.0",
 ]
+
+[tool.ruff]
+ignore = ["B008", "F821", "E402"]
