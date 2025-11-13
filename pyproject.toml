@@ -76,7 +76,3 @@ exclude_lines = [
     "class .*\\(Protocol\\):",
     "@abstractmethod",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
