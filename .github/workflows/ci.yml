@@ -35,7 +35,18 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: uv sync
+
+      - name: Create .env file
+        run: |
+          echo "APP_NAME=${{ secrets.APP_NAME }}" > .env
+          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "DEBUG=${{ secrets.DEBUG }}" >> .env
+          echo "LOG_LEVEL=${{ secrets.LOG_LEVEL }}" >> .env
+
+      - name: Verify .env file created
+        run: ls -la .env
 
       - name: Run Ruff (Linter)
         run: uv run ruff check .
@@ -45,3 +56,9 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest -v --tb=short
+
+      - name: Upload coverage reports
+        if: always()
+        run: |
+          uv run pytest --cov=app --cov-report=xml
+        continue-on-error: true
