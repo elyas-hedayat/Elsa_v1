@@ -1,15 +1,14 @@
 import uuid
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel
 
 
 class ProfileResponse(BaseModel):
-    job: Optional[str] = None
-    birthday: Optional[date] = None
-    address: Optional[str] = None
-    thumbnail: Optional[str] = None
+    job: str | None = None
+    birthday: date | None = None
+    address: str | None = None
+    thumbnail: str | None = None
 
     class Config:
         from_attributes = True
@@ -18,7 +17,7 @@ class ProfileResponse(BaseModel):
 class UserResponse(BaseModel):
     id: uuid.UUID
     username: str
-    profile: Optional[ProfileResponse] = None
+    profile: ProfileResponse | None = None
 
     class Config:
         from_attributes = True
