@@ -5,6 +5,11 @@ on:
     branches:
       - "feature/*"
 
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
 jobs:
   test:
     name: test
@@ -43,6 +48,10 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,13 +64,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
             echo "pr_exists=false" >> $GITHUB_OUTPUT
+            echo "No existing PR found"
           else
             echo "pr_exists=true" >> $GITHUB_OUTPUT
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "Found existing PR #$PR_NUMBER"
           fi
 
       - name: Create Pull Request
@@ -74,7 +85,7 @@ jobs:
           gh pr create \
             --base main \
             --head "$BRANCH_NAME" \
-            --title "🚀 $BRANCH_NAME → main" \
+            --title "🚀 Merge $BRANCH_NAME into main" \
             --body "## ✅ CI Passed - Ready for Review
 
           **Branch:** \`$BRANCH_NAME\`
