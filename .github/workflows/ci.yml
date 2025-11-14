@@ -20,11 +20,11 @@ jobs:
       - name: Install uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run: |
-          uv sync --all-groups --frozen
+          uv sync --extra dev
 
       - name: Run pre-commit checks
         run: |
