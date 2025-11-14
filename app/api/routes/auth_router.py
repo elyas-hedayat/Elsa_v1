@@ -1,47 +1,49 @@
+import uuid
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.databases import get_session
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.auth import (
-    ChangePasswordRequest,
-    ChangePasswordResponse,
-    LoginRequest,
-    RegisterRequest,
-)
-from app.services.auth_service import AuthService
+from app.schemas.user import UserResponse
+from app.services.user_service import UserService
 
-router = APIRouter(prefix="/auth", tags=["auth"])
-auth_service = AuthService()
+router = APIRouter(prefix="/users", tags=["users"])
+user_service = UserService()
 
 
-@router.post("/register")
-async def register(data: RegisterRequest, session: AsyncSession = Depends(get_session)):
-    user = await auth_service.register_user(session, data.username, data.password)
-    return {"message": "User created", "user_id": user.id}
+@router.get("/", response_model=list[UserResponse])
+async def list_users(session: Annotated[AsyncSession, Depends(get_session)]):
+    """
+    List all users.
+    """
+    return await user_service.user_list(session)
 
 
-@router.post("/login")
-async def login(data: LoginRequest, session: AsyncSession = Depends(get_session)):
-    return await auth_service.authenticate_user(session, data.username, data.password)
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Get the currently authenticated user's info.
+    """
+    return current_user
 
 
-@router.post(
-    "/change-password",
-    response_model=ChangePasswordResponse,
-    summary="Change current user password",
-    description="Requires valid Bearer token. User must provide old and new password.",
-)
-async def change_password(
-    data: ChangePasswordRequest,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    result = await auth_service.change_password(
-        session,
-        current_user,
-        data.old_password,
-        data.new_password,
-    )
-    return result
+@router.get("/{pk}", response_model=UserResponse)
+async def get_user(pk: uuid.UUID, session: Annotated[AsyncSession, Depends(get_session)]):
+    """
+    Get a user by their UUID.
+    """
+    user_instance = await user_service.get_user_by_id(session=session, pk=pk)
+    if not user_instance:
+        return {"error": "User not found"}  # Or raise HTTPException(status_code=404)
+    return user_instance
+
+
+@router.delete("/{pk}/delete", status_code=204)
+async def delete_user(pk: uuid.UUID, session: Annotated[AsyncSession, Depends(get_session)]):
+    """
+    Delete a user by their UUID.
+    """
+    await user_service.delete_user(session=session, pk=pk)

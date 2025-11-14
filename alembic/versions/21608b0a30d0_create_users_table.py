@@ -6,7 +6,7 @@ Create Date: 2025-11-11 22:41:26.365783
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 
@@ -14,9 +14,9 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "21608b0a30d0"
-down_revision: Union[str, Sequence[str], None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -33,12 +33,8 @@ def downgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.UUID(), autoincrement=False, nullable=False),
-        sa.Column(
-            "username", sa.VARCHAR(length=50), autoincrement=False, nullable=False
-        ),
-        sa.Column(
-            "password", sa.VARCHAR(length=255), autoincrement=False, nullable=False
-        ),
+        sa.Column("username", sa.VARCHAR(length=50), autoincrement=False, nullable=False),
+        sa.Column("password", sa.VARCHAR(length=255), autoincrement=False, nullable=False),
         sa.Column("is_active", sa.BOOLEAN(), autoincrement=False, nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("users_pkey")),
         sa.UniqueConstraint(

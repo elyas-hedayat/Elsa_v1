@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 
 from sqlalchemy import Boolean, String
@@ -21,11 +23,13 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(1000), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    profile: Mapped["Profile"] = relationship(
+    # One-to-one relationship with Profile
+    profile: Mapped["Profile"] = relationship(  # noqa
+        "Profile",
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username})>"

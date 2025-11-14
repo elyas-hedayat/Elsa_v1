@@ -1,26 +1,35 @@
-import uuid
-from datetime import date
+from __future__ import annotations
 
-from sqlalchemy import DATE, INT, ForeignKey, String
+import uuid
+
+from sqlalchemy import Boolean, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.databases import Base
 
 
-class Profile(Base):
-    __tablename__ = "profile"
+class User(Base):
+    __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(INT, primary_key=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id"), unique=True, nullable=False
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        index=True,
+    )
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(1000), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # One-to-one relationship with Profile
+    profile: Mapped["Profile"] = relationship(  # noqa
+        "Profile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
-    birthdate: Mapped[date] = mapped_column(DATE, nullable=True)
-    address: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
-    job: Mapped[str] = mapped_column(String(50), nullable=False, default="")
-    thumbnail: Mapped[str] = mapped_column(String(100), nullable=False, default="")
-
-    user: Mapped["User"] = relationship(back_populates="profile")
-
-    def __repr__(self) -> str:
-        return self.job
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"

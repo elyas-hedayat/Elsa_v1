@@ -14,9 +14,7 @@ profile_repo = ProfileRepository()
 
 
 class AuthService:
-    async def register_user(
-        self, session: AsyncSession, username: str, password: str
-    ) -> User:
+    async def register_user(self, session: AsyncSession, username: str, password: str) -> User:
         existing_user = await user_repo.get_by_username(session, username)
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists")
@@ -27,9 +25,7 @@ class AuthService:
         await profile_repo.add(session, profile)
         return created_user
 
-    async def authenticate_user(
-        self, session: AsyncSession, username: str, password: str
-    ):
+    async def authenticate_user(self, session: AsyncSession, username: str, password: str):
         user = await user_repo.get_by_username(session, username)
         if not user or not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
