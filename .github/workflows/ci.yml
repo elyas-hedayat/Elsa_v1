@@ -38,73 +38,72 @@ jobs:
           uv run pytest -v
 
   create-pull-request:
-      name: Create or Update PR
-      needs: test
-      runs-on: ubuntu-latest
-      if: success()
+    name: Create or Update PR
+    needs: test
+    runs-on: ubuntu-latest
+    if: success()
 
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        - name: Check if PR already exists
-          id: check-pr
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            BRANCH_NAME="${{ github.ref_name }}"
-            PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number')
+      - name: Check if PR already exists
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number')
 
-            if [ -z "$PR_NUMBER" ]; then
-              echo "pr_exists=false" >> $GITHUB_OUTPUT
-            else
-              echo "pr_exists=true" >> $GITHUB_OUTPUT
-              echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-            fi
+          if [ -z "$PR_NUMBER" ]; then
+            echo "pr_exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "pr_exists=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
 
-        - name: Create Pull Request
-          if: steps.check-pr.outputs.pr_exists == 'false'
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            BRANCH_NAME="${{ github.ref_name }}"
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.pr_exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
 
-            gh pr create \
-              --base main \
-              --head "$BRANCH_NAME" \
-              --title "🚀 $BRANCH_NAME → main" \
-              --body "## ✅ CI Passed - Ready for Review
+          gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "🚀 $BRANCH_NAME → main" \
+            --body "## ✅ CI Passed - Ready for Review
 
-            **Branch:** \`$BRANCH_NAME\`
-            **Target:** \`main\`
+          **Branch:** \`$BRANCH_NAME\`
+          **Target:** \`main\`
 
-            ### 📊 CI Results
-            - ✅ Linting passed
-            - ✅ Tests passed
-            - ✅ Coverage checks passed
+          ### 📊 CI Results
+          - ✅ Linting passed
+          - ✅ Tests passed
+          - ✅ Coverage checks passed
 
-            ### 📝 Description
-            This PR was automatically created after all CI checks passed successfully.
+          ### 📝 Description
+          This PR was automatically created after all CI checks passed successfully.
 
-            Please review the changes and merge when ready.
+          Please review the changes and merge when ready.
 
-            ---
-            **Author:** @${{ github.actor }}
-            **Commit:** \`${{ github.sha }}\`
-            **Workflow:** [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
-              --label "auto-pr,ci-passed"
+          ---
+          **Author:** @${{ github.actor }}
+          **Commit:** \`${{ github.sha }}\`
+          **Workflow:** [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
-        - name: Update existing PR
-          if: steps.check-pr.outputs.pr_exists == 'true'
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            PR_NUMBER="${{ steps.check-pr.outputs.pr_number }}"
+      - name: Update existing PR
+        if: steps.check-pr.outputs.pr_exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ steps.check-pr.outputs.pr_number }}"
 
-            gh pr comment $PR_NUMBER --body "✅ **CI passed** on commit \`${{ github.sha }}\`
+          gh pr comment $PR_NUMBER --body "✅ **CI passed** on commit \`${{ github.sha }}\`
 
-            All checks have passed successfully. This PR is ready for review.
+          All checks have passed successfully. This PR is ready for review.
 
-            [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
