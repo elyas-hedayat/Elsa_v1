@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --frozen
+          uv sync --all-groups --frozen
 
       - name: Run pre-commit checks
         run: |
