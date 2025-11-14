@@ -25,5 +25,4 @@ async def db_test(
 
 @router.get("/health")
 def health_check():
-    print("Health Check")
     return {"status": "ok"}
